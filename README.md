@@ -84,23 +84,58 @@ Stop the lab with `docker compose down`. To discard the browser profile too, run
 
 More hands-on examples are in [docs/TEST-SCENARIOS.md](docs/TEST-SCENARIOS.md).
 
-## How it works
+## How FluxGate works
 
-```text
-Laptop browser → private Codespaces forwarded port 6080 → noVNC
-                                                      ↓
-                                             Containerized Chrome
-                                                      ↓
-                                           FluxGate MV3 extension
-                                                      ↓
-                                           CDP Fetch response hook
-                                                      ↓
-                                       Modified JSON → demo web UI
-
-Synthetic demo service (Docker) ──original JSON──► Chrome request
+```mermaid
+flowchart TD
+    U["Tester uses the demo web application"] --> R["Browser sends GET /api/products"]
+    R --> API["Synthetic backend returns original JSON"]
+    API --> CDP["Chrome pauses the response at CDP Fetch response stage"]
+    CDP --> MATCH{"FluxGate rule matches URL, GET and JSON response?"}
+    MATCH -->|No| PASS["Continue original response"]
+    MATCH -->|Yes| BODY["Read response body and parse JSON"]
+    BODY --> PATH{"Existing target JSON path found?"}
+    PATH -->|No| PASS
+    PATH -->|Yes| PATCH["Replace one field with configured test value"]
+    PATCH --> FULFILL["Fulfill paused response with modified JSON"]
+    FULFILL --> UI["Web application renders test response"]
+    PASS --> UI
+    UI --> ASSERT["Tester checks UI behavior and resilience"]
+    classDef intercept fill:#e5efff,stroke:#3b62a9,color:#132545;
+    classDef change fill:#fff1d9,stroke:#ba741b,color:#4f300b;
+    classDef result fill:#e6f6e9,stroke:#38834a,color:#133f20;
+    class CDP,MATCH,BODY,PATH intercept;
+    class PATCH,FULFILL change;
+    class UI,ASSERT result;
 ```
 
-FluxGate uses Chrome's `debugger` permission and CDP `Fetch` response-stage interception. When a matching JSON GET response is paused, it reads the response body, replaces one existing JSON value, and fulfills the response to the test tab. Nonmatching requests are continued normally. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
+The application makes a normal API call and the backend returns its normal JSON. **Before the browser page consumes the response**, FluxGate's MV3 service worker uses Chrome DevTools Protocol (CDP) to inspect and, for a matching rule, change **one existing JSON field**. The replacement is visible **only in the selected browser tab**; the backend response is not changed at its source. Nonmatching responses pass through. See [Architecture](docs/ARCHITECTURE.md) for the detailed interception flow and deployment setup.
+
+## What can I test with it?
+
+```mermaid
+flowchart LR
+    F["FluxGate: field-level response override"]
+    F --> EMPTY["Missing or empty-looking values"]
+    F --> TYPE["Unexpected JSON types"]
+    F --> BOUND["Boundary and business values"]
+    F --> FLOW["Alternate UI states"]
+    EMPTY --> A["Blank name / null name"]
+    TYPE --> B["Boolean where text expected"]
+    BOUND --> C["Price = 0 or -100"]
+    FLOW --> D["inStock = false"]
+```
+
+| Example rule | Testing purpose | Expected observation |
+| --- | --- | --- |
+| `products[0].name` → Blank | Empty-state handling | No broken layout or exception |
+| `products[0].name` → Null | Null-safety | UI handles a null product name |
+| `products[0].name` → Boolean `true` | Schema/type resilience | UI handles an unexpected type (shown in our demo screenshot) |
+| `products[0].price` → Number `0` | Boundary values | Price formatting and zero-price decisions |
+| `products[0].price` → Number `-100` | Invalid business value | Validation, messaging or graceful handling |
+| `products[0].inStock` → Boolean `false` | Alternate UI flow | Availability state updates correctly |
+
+**Scope:** This is **field-level response mocking of existing GET JSON responses**, not a general mock server. It cannot invent a missing response, create a missing JSON field, replace HTTP status codes or intercept arbitrary non-JSON bodies. For complete exercises see [Test scenarios](docs/TEST-SCENARIOS.md).
 
 ## Run tests
 
