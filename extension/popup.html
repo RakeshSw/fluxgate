@@ -1,0 +1,10 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FluxGate</title><link rel="stylesheet" href="popup.css"></head>
+<body><main><header><span class="logo">FG</span><div><h1>FluxGate</h1><p>JSON Response Lab</p></div></header>
+<p class="notice">For authorized test sites only. Works on the active tab.</p>
+<label>Request URL contains <input id="url" placeholder="/api/products"></label>
+<label>Exact JSON path <input id="path" placeholder="products[0].name"></label>
+<div class="row"><label>Replacement type<select id="type"><option value="blank">Blank</option><option value="null">Null</option><option value="string">String</option><option value="number">Number</option><option value="boolean">Boolean</option><option value="json">JSON</option></select></label><label>Value <input id="value" placeholder="Replacement"></label></div>
+<label class="check"><input id="once" type="checkbox" checked> Stop after one successful override</label>
+<div class="buttons"><button id="demo">Load demo rule</button><button id="start" class="primary">Start</button><button id="stop">Stop</button></div>
+<output id="status" role="status">Ready</output><p class="foot">Reload the demo page after starting. Chrome will display a debugger notice.</p>
+</main><script type="module" src="popup.js"></script></body></html>

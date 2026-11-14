@@ -1,0 +1,24 @@
+services:
+  demo:
+    build: ./demo
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health',timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+  fluxgate:
+    build: .
+    depends_on:
+      demo:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${FLUXGATE_PORT:-6080}:6080"
+    shm_size: "1gb"
+    environment:
+      START_URL: http://demo:8080
+      FLUXGATE_VNC_PASSWORD: ${FLUXGATE_VNC_PASSWORD:-}
+      FLUXGATE_DISABLE_CHROME_SANDBOX: ${FLUXGATE_DISABLE_CHROME_SANDBOX:-true}
+    volumes:
+      - browser-profile:/home/labuser/profile
+volumes:
+  browser-profile:

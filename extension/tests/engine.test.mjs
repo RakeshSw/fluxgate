@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {parseValue,editDocument,eligibleRequest,filteredHeaders} from '../engine.js';
+test('replacements parse to correct types',()=>{assert.equal(parseValue('blank',''), '');assert.equal(parseValue('number','4.5'),4.5);assert.equal(parseValue('boolean','false'),false);assert.equal(parseValue('null','x'),null);assert.deepEqual(parseValue('json','{"a":1}'),{a:1});});
+test('invalid input rejected',()=>{assert.throws(()=>parseValue('number','oops'));assert.throws(()=>parseValue('boolean','yes'));});
+test('exact nested paths and arrays',()=>{const d={products:[{name:'A'},{name:'B'}]};const v=editDocument(d,'products[0].name','');assert.equal(v.original,'A');assert.equal(d.products[0].name,'');assert.equal(d.products[1].name,'B');});
+test('does not create unspecified paths',()=>{assert.throws(()=>editDocument({x:1},'bad.field',0));});
+test('prototype attack paths rejected',()=>{assert.throws(()=>editDocument({a:{}},'a.__proto__',0));});
+test('only JSON GET matched',()=>{assert.ok(eligibleRequest('http://demo/api/products','/api/products','application/json; charset=utf-8'));assert.ok(!eligibleRequest('http://demo/api/products','/api/products','text/html'));assert.ok(!eligibleRequest('http://demo/api/products','/api/products','application/json','POST'));});
+test('body-dependent headers removed',()=>{assert.deepEqual(filteredHeaders([{name:'Content-Length',value:'10'},{name:'ETag',value:'abc'},{name:'Content-Type',value:'application/json'}]),[{name:'Content-Type',value:'application/json'}]);});
