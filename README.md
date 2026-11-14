@@ -1,8 +1,10 @@
-# FluxGate
+# FluxGate — Browser API Mocking & Fault Injection
 
 **Browser API Response Fault-Injection Lab · Chrome DevTools Protocol · Docker · GitHub Codespaces**
 
-FluxGate is a lightweight testing lab for **modifying a JSON API response inside a test browser**, without changing the backend service. Use it to explore how a frontend handles missing fields, unexpected values and type mismatches.
+[![Tests](https://github.com/RakeshSw/fluxgate/actions/workflows/test.yml/badge.svg)](https://github.com/RakeshSw/fluxgate/actions/workflows/test.yml)
+
+FluxGate is a lightweight testing lab for **modifying a JSON API response inside a test browser**, without changing the backend service. Use it to explore how a frontend handles empty or null values, unexpected values and type mismatches.
 
 **No local Docker installation needed:** launch the included Chrome browser from **GitHub Codespaces** and access it through a private, password-protected noVNC session.
 
@@ -27,6 +29,12 @@ In the remote Chrome browser, open the **FluxGate** extension. Choose **Load dem
 ![End-to-end FluxGate test changing a product name to boolean true](docs/images/03-interception-success.png)
 
 This real Codespaces test changed `products[0].name` from `"Sample Notebook"` (string) to `true` (boolean). The UI rendered `true`, while the extension reported **One-shot rule completed**. This is an example of **type-mismatch fault injection**. The backend's original API response is not changed.
+
+## Documentation
+
+- [Architecture and CDP Interception](docs/ARCHITECTURE.md)
+- [Functional Test Scenarios](docs/TEST-SCENARIOS.md)
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md)
 
 ## Quick start: GitHub Codespaces (recommended)
 
@@ -116,7 +124,7 @@ The application makes a normal API call and the backend returns its normal JSON.
 ```mermaid
 flowchart LR
     F["FluxGate: field-level response override"]
-    F --> EMPTY["Missing or empty-looking values"]
+    F --> EMPTY["Empty and null field values"]
     F --> TYPE["Unexpected JSON types"]
     F --> BOUND["Boundary and business values"]
     F --> FLOW["Alternate UI states"]
