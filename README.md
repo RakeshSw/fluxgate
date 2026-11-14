@@ -161,4 +161,4 @@ Read [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) if the forwarded URL sho
 
 ## Security and provenance
 
-Read [SECURITY.md](SECURITY.md) and [LICENSE-NOTE.md](LICENSE-NOTE.md). **The repository is intentionally private while publication/IP rights are checked.** Removing employer-specific references alone does not authorize public distribution. No open-source license has been granted yet.
+FluxGate is distributed under the [MIT License](LICENSE). See [SECURITY.md](SECURITY.md) for safe usage and security considerations.
