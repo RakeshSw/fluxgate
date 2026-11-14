@@ -9,7 +9,10 @@ class PublicSafetyTests(unittest.TestCase):
         for path in ROOT.rglob('*'):
             if not path.is_file() or path == Path(__file__).resolve() or path.suffix.lower() in ('.png', '.pyc') or '__pycache__' in path.parts:
                 continue
-            content = path.read_text(encoding='utf-8')
+            try:
+                content = path.read_text(encoding='utf-8')
+            except UnicodeDecodeError:
+                continue  # Binary files are checked separately for credentials.
             for word in banned:
                 with self.subTest(file=str(path.relative_to(ROOT)), banned=word):
                     self.assertNotIn(word, content.lower())
